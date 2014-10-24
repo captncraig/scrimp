@@ -1,4 +1,4 @@
-package lexer
+package parse
 
 import (
 	"fmt"
@@ -43,6 +43,7 @@ const (
 	TokVoid
 	TokLAngle
 	TokRAngle
+	TokStar
 )
 
 var idTokens = map[string]TokenType{
@@ -138,13 +139,6 @@ func (l *Lexer) errorf(format string, args ...interface{}) stateFn {
 	return nil
 }
 
-// nextItem returns the next item from the input.
-func (l *Lexer) nextToken() Token {
-	item := <-l.tokens
-	l.lastPos = item.Pos
-	return item
-}
-
 func Lex(input string) <-chan Token {
 	l := &Lexer{
 		input:  input,
@@ -167,10 +161,23 @@ func isAlphaNumeric(r rune) bool {
 	return r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r)
 }
 
+var runeMap = map[rune]TokenType{
+	'*': TokStar,
+}
+
 func startState(l *Lexer) stateFn {
 	r := l.next()
+	if r == ' ' || r == '\r' || r == '\t' || r == '\n' {
+		l.ignore()
+		return startState
+	}
 	if r == '_' || unicode.IsLetter(r) {
 		return lexIdentifier
+	}
+	tt, ok := runeMap[r]
+	if ok {
+		l.emit(tt)
+		return startState
 	}
 	l.emit(TokEOF)
 	return nil

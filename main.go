@@ -2,17 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/captncraig/scrimp/lexer"
+	"github.com/captncraig/scrimp/parse"
 )
 
 func main() {
-	lex := lexer.Lex("include")
-	for {
-		tok := <-lex
-		fmt.Println(tok)
-		if tok.Type == lexer.TokEOF {
-			return
-		}
-
-	}
+	program := `
+	namespace csharp foobar 
+	namespace java foo2bar namespace * blah
+	namespace * blah2
+	`
+	fmt.Println(parse.Parse(program))
 }
