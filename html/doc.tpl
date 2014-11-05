@@ -1,0 +1,3 @@
+{{if .HasDoc}} 
+{{.Doc}}
+{{end}}

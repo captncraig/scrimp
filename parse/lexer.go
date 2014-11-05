@@ -44,6 +44,11 @@ const (
 	TokLAngle
 	TokRAngle
 	TokStar
+	TokStringConst
+	TokMap
+	TokSet
+	TokList
+	TokEqual
 )
 
 var idTokens = map[string]TokenType{
@@ -59,6 +64,9 @@ var idTokens = map[string]TokenType{
 	"optional":  TokOptional,
 	"oneway":    TokOneway,
 	"throws":    TokThrows,
+	"list":      TokList,
+	"map":       TokMap,
+	"set":       TokSet,
 }
 
 const eof = -1
@@ -149,12 +157,10 @@ func Lex(input string) <-chan Token {
 }
 
 func (l *Lexer) run() {
-	fmt.Println("yyy")
 	s := startState
 	for s != nil {
 		s = s(l)
 	}
-
 }
 
 func isAlphaNumeric(r rune) bool {
@@ -163,6 +169,10 @@ func isAlphaNumeric(r rune) bool {
 
 var runeMap = map[rune]TokenType{
 	'*': TokStar,
+	'<': TokLAngle,
+	'>': TokRAngle,
+	',': TokComma,
+	'=': TokEqual,
 }
 
 func startState(l *Lexer) stateFn {
@@ -179,10 +189,28 @@ func startState(l *Lexer) stateFn {
 		l.emit(tt)
 		return startState
 	}
+	if r == '"' || r == '\'' {
+		return lexQuote(r)
+	}
 	l.emit(TokEOF)
 	return nil
 }
 
+func lexQuote(r rune) stateFn {
+	return func(l *Lexer) stateFn {
+		for {
+			t := l.next()
+			if t == r {
+				l.emit(TokStringConst)
+				return startState
+			}
+			if t == eof {
+				l.errorf("Unclosed string literal")
+				return nil
+			}
+		}
+	}
+}
 func lexIdentifier(l *Lexer) stateFn {
 	for {
 		r := l.next()

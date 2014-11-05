@@ -1,5 +1,9 @@
 package parse
 
+import (
+	"strings"
+)
+
 type parser struct {
 	lex    <-chan Token
 	peeked *Token
@@ -47,6 +51,10 @@ func (p *parser) parseDocument() *Document {
 		switch tok.Type {
 		case TokNamespace:
 			p.parseNamespace(doc.Namespaces)
+		case TokInclude:
+			p.parseInclude(doc)
+		case TokConst:
+			doc.AddConst(p.parseConst())
 		case TokEOF:
 			return doc
 		default:
@@ -54,6 +62,48 @@ func (p *parser) parseDocument() *Document {
 		}
 	}
 	return doc
+}
+
+func (p *parser) parseConst() *Constant {
+	c := Constant{}
+	c.FieldType = p.parseFieldType()
+	c.Name = p.require(TokIdentifier).Val
+	p.require(TokEqual)
+	//c.Value = p.parseConstValue()
+	return &c
+}
+
+func (p *parser) parseFieldType() string {
+	tok := p.require(TokIdentifier, TokSet, TokMap, TokList)
+	if tok.Type == TokIdentifier {
+		return tok.Val
+	}
+	if tok.Type == TokSet {
+		p.require(TokLAngle)
+		inner := p.parseFieldType()
+		p.require(TokRAngle)
+		return "set<" + inner + ">"
+	}
+	if tok.Type == TokList {
+		p.require(TokLAngle)
+		inner := p.parseFieldType()
+		p.require(TokRAngle)
+		return "list<" + inner + ">"
+	}
+	if tok.Type == TokMap {
+		p.require(TokLAngle)
+		key := p.parseFieldType()
+		p.require(TokComma)
+		val := p.parseFieldType()
+		p.require(TokRAngle)
+		return "map<" + key + "," + val + ">"
+	}
+	panic("cant get here")
+}
+
+func (p *parser) parseInclude(d *Document) {
+	q := p.require(TokStringConst)
+	d.Includes = append(d.Includes, strings.Trim(q.Val, "\"'"))
 }
 
 func (p *parser) parseNamespace(m map[string]string) {
