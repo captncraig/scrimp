@@ -49,6 +49,7 @@ const (
 	TokSet
 	TokList
 	TokEqual
+	TokExtends
 )
 
 var idTokens = map[string]TokenType{
@@ -67,6 +68,7 @@ var idTokens = map[string]TokenType{
 	"list":      TokList,
 	"map":       TokMap,
 	"set":       TokSet,
+	"extends":   TokExtends,
 }
 
 const eof = -1
@@ -174,6 +176,12 @@ var runeMap = map[rune]TokenType{
 	'>': TokRAngle,
 	',': TokComma,
 	'=': TokEqual,
+	'{': TokLCurly,
+	'(': TokLParen,
+	'}': TokRCurly,
+	')': TokRParen,
+	';': TokSemicolon,
+	':': TokColon,
 }
 
 func startState(l *Lexer) stateFn {
@@ -196,6 +204,9 @@ func startState(l *Lexer) stateFn {
 	if r == '+' || r == '-' || unicode.IsDigit(r) {
 		return lexNumber
 	}
+	if r == '/' {
+		return lexComment
+	}
 	l.emit(TokEOF)
 	return nil
 }
@@ -214,6 +225,43 @@ func lexQuote(r rune) stateFn {
 			}
 		}
 	}
+}
+
+func lexComment(l *Lexer) stateFn {
+	if l.accept("/") {
+		//line comment
+		for {
+			r := l.next()
+			if r == '\n' || r == '\r' {
+				l.ignore()
+				return startState
+			}
+		}
+	}
+	if l.accept("*") {
+		doc := false
+		if l.accept("*") {
+			//possible doctext
+			if l.accept("/") {
+				l.ignore() //unless it is /**/
+				return startState
+			}
+			doc = true
+		}
+		for {
+			x := l.next()
+			if x == '*' && l.accept("/") {
+				if doc {
+					l.emit(TokDocText)
+
+				} else {
+					l.ignore()
+				}
+				return startState
+			}
+		}
+	}
+	return nil
 }
 
 func lexNumber(l *Lexer) stateFn {

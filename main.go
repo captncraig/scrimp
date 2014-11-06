@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/captncraig/scrimp/model"
 	"github.com/captncraig/scrimp/parse"
@@ -11,23 +12,32 @@ import (
 
 func main() {
 	program := `
+	/** program level doctext */
 	namespace csharp foobar
 	namespace java foo2bar namespace * blah
-	namespace * blah2
+	namespace * blah2 //lsakjdlkasjd service
 	include "abc"
 	include 'a"bc'
+	/** this const is fun*/
 	const list<map<Foo,bar>> foo="abc"
+	/** typdef a */
 	typedef int Foo
+	/** td 2 */
 	typedef list<map<Foo,bar>> complexListType
+	enum EWhatever { A B ; C }
+	enum EWhatever2 { A=1B=5, C }
+	struct foo{}
+	struct xyz{string x 4:foo bar required cow bessie;7:optional baxxx xxx="45356"}
+	service SSS extends TTT { void foo() throws(required crapEx x)}
+	
+	
+	
 	`
+	//
 	doc := parse.Parse(program)
 	fmt.Println(doc)
-	for _, c := range doc.Consts {
-		fmt.Println(c)
-	}
-	for _, t := range doc.Typedefs {
-		fmt.Println(t)
-	}
+	b, _ := json.MarshalIndent(doc, "", "  ")
+	fmt.Println(string(b))
 
 }
 
