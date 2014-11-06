@@ -207,8 +207,22 @@ func startState(l *Lexer) stateFn {
 	if r == '/' {
 		return lexComment
 	}
-	l.emit(TokEOF)
-	return nil
+	if r == '#' {
+		for {
+			r = l.next()
+			if r == '\n' || r == '\r' {
+				l.ignore()
+				return startState
+			}
+		}
+	}
+	if r == eof {
+		l.emit(TokEOF)
+
+		return nil
+	}
+	panic("unexpected char")
+
 }
 
 func lexQuote(r rune) stateFn {

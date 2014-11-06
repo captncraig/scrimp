@@ -5,49 +5,24 @@ import (
 	"fmt"
 	"github.com/captncraig/scrimp/model"
 	"github.com/captncraig/scrimp/parse"
+	"io/ioutil"
 	"log"
 	"os"
 	"text/template"
 )
 
 func main() {
-	program := `
-	/** program level doctext 
-	
-	
-	aa
-	
-	*/
-	namespace csharp foobar
-	namespace java foo2bar namespace * blah
-	namespace * blah2 //lsakjdlkasjd service
-	include "abc"
-	include 'a"bc'
-	/** this const is fun*/
-	const list<map<Foo,bar>> foo="abc"
-	/** typdef a */
-	typedef int Foo
-	/** td 2 */
-	typedef list<map<Foo,bar>> complexListType
-	/** enum */
-	enum EWhatever { A B ; C }
-	enum EWhatever2 { A=1B=5, C }
-	struct foo{}
-	/** This is xyz */
-	struct xyz{/** xxxxxxx*/string x 4:foo bar required cow bessie;7:optional baxxx xxx="45356"}
-	service SSS extends TTT { 
-	/** ffff */
-	void foo() throws(/*  inline  */required crapEx x)}
-	
-	
-	
-	`
-	//
-	doc := parse.Parse(program)
+
+	filename := "tutorial.thrift"
+	f, _ := os.Open(filename)
+	program, err := ioutil.ReadAll(f)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	doc := parse.Parse(string(program))
 	fmt.Println(doc)
 	b, _ := json.MarshalIndent(doc, "", "  ")
 	fmt.Println(string(b))
-
 }
 
 func testGenerate() {

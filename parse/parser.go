@@ -34,7 +34,7 @@ func (p *parser) grabToken() Token {
 		fmt.Println(tok.Val)
 		tok.Val = tok.Val[3 : len(tok.Val)-2]
 		tok.Val = strings.Trim(tok.Val, " \t\r\n")
-		p.docText = tok.Val
+		p.docText += tok.Val
 		tok = <-p.lex
 	}
 	return tok
@@ -135,6 +135,9 @@ func (p *parser) parseService() *Service {
 	p.require(TokLCurly)
 	for !p.takeIf(TokRCurly) {
 		s.AddFunction(p.parseFunction())
+		if p.peek().Type == TokComma || p.peek().Type == TokSemicolon {
+			p.nextToken()
+		}
 	}
 	return &s
 }
@@ -159,6 +162,7 @@ func (p *parser) parseFunction() *Function {
 		f.Throws = p.parseFieldList()
 		p.require(TokRParen)
 	}
+	p.clearDocText()
 	return &f
 }
 
