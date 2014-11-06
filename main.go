@@ -3,25 +3,35 @@ package main
 import (
 	"fmt"
 	"github.com/captncraig/scrimp/model"
+	"github.com/captncraig/scrimp/parse"
 	"log"
 	"os"
 	"text/template"
 )
 
 func main() {
-	//program := `
-	//namespace csharp foobar
-	//namespace java foo2bar namespace * blah
-	//namespace * blah2
-	//include "abc"
-	//include 'a"bc'
-	//const list<map<Foo,bar>> foo=
-	//`
-	//doc := parse.Parse(program)
-	//fmt.Println(doc)
-	//for _, c := range doc.Consts {
-	//	fmt.Println(c)
-	//}
+	program := `
+	namespace csharp foobar
+	namespace java foo2bar namespace * blah
+	namespace * blah2
+	include "abc"
+	include 'a"bc'
+	const list<map<Foo,bar>> foo="abc"
+	typedef int Foo
+	typedef list<map<Foo,bar>> complexListType
+	`
+	doc := parse.Parse(program)
+	fmt.Println(doc)
+	for _, c := range doc.Consts {
+		fmt.Println(c)
+	}
+	for _, t := range doc.Typedefs {
+		fmt.Println(t)
+	}
+
+}
+
+func testGenerate() {
 	temp, err := template.ParseFiles("html/program.tpl", "html/doc.tpl", "html/toc.tpl")
 	for _, t := range temp.Templates() {
 		fmt.Println(t.Name())

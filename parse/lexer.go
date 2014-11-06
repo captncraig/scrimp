@@ -19,7 +19,7 @@ const (
 	TokError TokenType = iota
 	TokEOF
 	TokIdentifier
-	TokInteger
+	TokNumConst
 	TokNamespace
 	TokInclude
 	TokConst
@@ -161,6 +161,7 @@ func (l *Lexer) run() {
 	for s != nil {
 		s = s(l)
 	}
+	close(l.tokens)
 }
 
 func isAlphaNumeric(r rune) bool {
@@ -192,6 +193,9 @@ func startState(l *Lexer) stateFn {
 	if r == '"' || r == '\'' {
 		return lexQuote(r)
 	}
+	if r == '+' || r == '-' || unicode.IsDigit(r) {
+		return lexNumber
+	}
 	l.emit(TokEOF)
 	return nil
 }
@@ -211,6 +215,20 @@ func lexQuote(r rune) stateFn {
 		}
 	}
 }
+
+func lexNumber(l *Lexer) stateFn {
+	for {
+		r := l.next()
+		if unicode.IsDigit(r) || r == '.' {
+			//absorb
+		} else {
+			l.backup()
+			l.emit(TokNumConst)
+			return startState
+		}
+	}
+}
+
 func lexIdentifier(l *Lexer) stateFn {
 	for {
 		r := l.next()

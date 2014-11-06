@@ -1,6 +1,7 @@
 package parse
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -55,6 +56,8 @@ func (p *parser) parseDocument() *Document {
 			p.parseInclude(doc)
 		case TokConst:
 			doc.AddConst(p.parseConst())
+		case TokTypedef:
+			doc.AddTypedef(p.parseTypeDef())
 		case TokEOF:
 			return doc
 		default:
@@ -64,13 +67,26 @@ func (p *parser) parseDocument() *Document {
 	return doc
 }
 
+func (p *parser) parseTypeDef() *Typedef {
+	return &Typedef{
+		FieldType: p.parseFieldType(),
+		Name:      p.require(TokIdentifier).Val,
+	}
+}
+
 func (p *parser) parseConst() *Constant {
 	c := Constant{}
 	c.FieldType = p.parseFieldType()
 	c.Name = p.require(TokIdentifier).Val
 	p.require(TokEqual)
-	//c.Value = p.parseConstValue()
+	c.Value = p.parseConstValue()
+	fmt.Println(c.Value)
 	return &c
+}
+
+func (p *parser) parseConstValue() string {
+	tok := p.require(TokNumConst, TokStringConst)
+	return tok.Val
 }
 
 func (p *parser) parseFieldType() string {
