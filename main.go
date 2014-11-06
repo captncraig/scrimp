@@ -12,7 +12,12 @@ import (
 
 func main() {
 	program := `
-	/** program level doctext */
+	/** program level doctext 
+	
+	
+	aa
+	
+	*/
 	namespace csharp foobar
 	namespace java foo2bar namespace * blah
 	namespace * blah2 //lsakjdlkasjd service
@@ -24,11 +29,15 @@ func main() {
 	typedef int Foo
 	/** td 2 */
 	typedef list<map<Foo,bar>> complexListType
+	/** enum */
 	enum EWhatever { A B ; C }
 	enum EWhatever2 { A=1B=5, C }
 	struct foo{}
-	struct xyz{string x 4:foo bar required cow bessie;7:optional baxxx xxx="45356"}
-	service SSS extends TTT { void foo() throws(required crapEx x)}
+	/** This is xyz */
+	struct xyz{/** xxxxxxx*/string x 4:foo bar required cow bessie;7:optional baxxx xxx="45356"}
+	service SSS extends TTT { 
+	/** ffff */
+	void foo() throws(/*  inline  */required crapEx x)}
 	
 	
 	

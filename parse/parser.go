@@ -32,6 +32,8 @@ func (p *parser) grabToken() Token {
 	tok := <-p.lex
 	for tok.Type == TokDocText {
 		fmt.Println(tok.Val)
+		tok.Val = tok.Val[3 : len(tok.Val)-2]
+		tok.Val = strings.Trim(tok.Val, " \t\r\n")
 		p.docText = tok.Val
 		tok = <-p.lex
 	}
@@ -68,14 +70,19 @@ func (p *parser) require(typ ...TokenType) Token {
 func (p *parser) parseDocument() *Document {
 	doc := NewDocument()
 	for {
-		tok := p.nextToken()
-		switch tok.Type {
-		case TokNamespace:
+		if p.takeIf(TokNamespace) {
 			p.acceptProgramDoctext(doc)
 			p.parseNamespace(doc.Namespaces)
-		case TokInclude:
+		} else if p.takeIf(TokInclude) {
 			p.acceptProgramDoctext(doc)
 			p.parseInclude(doc)
+		} else {
+			break
+		}
+	}
+	for {
+		tok := p.nextToken()
+		switch tok.Type {
 		case TokConst:
 			doc.AddConst(p.parseConst())
 		case TokTypedef:
@@ -94,6 +101,7 @@ func (p *parser) parseDocument() *Document {
 			fmt.Println(tok.Type)
 			panic("Unexpected token!!!")
 		}
+		p.clearDocText() //so docs don't leak from declaration to declaration if misplaced
 	}
 	return doc
 }
